@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Wheel OBS Overlay</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <link rel="stylesheet" href="obs-styles.css">
+</head>
+<body>
+    <div class="background-blur" id="backgroundBlur"></div>
+    <div class="obs-container">
+        <!-- Desktop Mode Info -->
+        <div class="desktop-info" id="desktopInfo" style="display: none;">
+            <div class="desktop-info-content">
+                <h3>🎯 Challenge Wheel OBS - Desktop Mode</h3>
+                <p>Tastenkürzel:</p>
+                <div class="shortcuts">
+                    <div><kbd>Ctrl+Shift+S</kbd> - Rad drehen</div>
+                    <div><kbd>Ctrl+Shift+R</kbd> - Test Result (Fail)</div>
+                    <div><kbd>Ctrl+Shift+C</kbd> - Console öffnen</div>
+                </div>
+                <div class="connection-status" id="connectionStatus">Verbindungsstatus wird geprüft...</div>
+            </div>
+        </div>
+        <!-- CS:GO Case Opening Container -->
+        <div class="case-container" id="caseContainer">
+            <div class="case-header">
+                <h2 class="case-title">Challenge Case Opening</h2>
+                <div class="case-pointer"></div>
+            </div>
+            <div class="case-reel-container">
+                <div class="case-reel" id="caseReel">
+                    <!-- Case items will be dynamically generated -->
+                </div>
+            </div>
+            <div class="case-selection-indicator"></div>
+        </div>
+
+        <!-- Challenge Info Panel -->
+        <div class="info-panel" id="infoPanel">
+            <div class="challenge-info">
+                <div class="challenge-image" id="challengeImage">
+                    🎯
+                </div>
+                <div class="challenge-details">
+                    <h3 class="challenge-title" id="challengeTitle">Challenge Titel</h3>
+                    <div class="challenge-type" id="challengeType">Typ</div>
+                    <div class="challenge-target" id="challengeTarget">Ziel: --</div>
+                    <div class="challenge-time" id="challengeTime">Zeit: --</div>
+                </div>
+            </div>
+            <div class="super-indicator" id="superIndicator" style="display: none;">
+                <div class="super-glow"></div>
+                <span>SUPER CHALLENGE</span>
+                <div class="super-multiplier">2x SPENDE</div>
+            </div>
+        </div>
+
+        <!-- Active Challenge Display -->
+        <div class="active-challenge" id="activeChallenge" style="display: none;">
+            <div class="challenge-header">
+                <h3 id="activeChallengeTitle">Challenge läuft...</h3>
+                <div class="challenge-status" id="challengeStatus">AKTIV</div>
+            </div>
+            <div class="challenge-progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-text" id="progressText">0 / 10</div>
+            </div>
+            <div class="challenge-timer-display">
+                <div class="timer-ring">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" class="timer-bg"></circle>
+                        <circle cx="50" cy="50" r="45" class="timer-progress" id="timerProgress"></circle>
+                    </svg>
+                    <div class="timer-text" id="timerText">03:00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Display -->
+        <div class="result-display" id="resultDisplay" style="display: none;">
+            <div class="result-header">
+                <div class="result-close-btn" onclick="obsOverlay.hideResult()">×</div>
+            </div>
+            <div class="result-content">
+                <div class="result-icon-container">
+                    <div class="result-icon" id="resultIcon">✅</div>
+                    <div class="result-icon-glow" id="resultIconGlow"></div>
+                </div>
+                <div class="result-text-container">
+                    <div class="result-title" id="resultTitle">GESCHAFFT!</div>
+                    <div class="result-subtitle" id="resultSubtitle">Challenge erfolgreich abgeschlossen</div>
+                </div>
+                <div class="donation-info" id="donationInfo" style="display: none;">
+                    <div class="donation-header">Spende hinzugefügt</div>
+                    <div class="donation-amount" id="donationAmount">+5,00€</div>
+                    <div class="donation-stats">
+                        <div class="session-total">
+                            <div class="session-label">Session</div>
+                            <div class="session-amount" id="sessionAmount">0,00€</div>
+                        </div>
+                        <div class="lifetime-total">
+                            <div class="lifetime-label">Gesamt</div>
+                            <div class="lifetime-amount" id="lifetimeAmount">0,00€</div>
+                        </div>
+                    </div>
+                    <div class="donation-multiplier" id="donationMultiplier" style="display: none;">SUPER CHALLENGE - 2x Multiplier!</div>
+                </div>
+            </div>
+            <div class="result-particles" id="resultParticles"></div>
+            <div class="result-background-blur" id="resultBackgroundBlur"></div>
+        </div>
+
+        <!-- Spin Animation Overlay -->
+        <div class="spin-overlay" id="spinOverlay" style="display: none;">
+            <div class="spin-text">Das Case öffnet sich...</div>
+            <div class="spin-animation">
+                <div class="spin-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="obs-overlay.js"></script>
+</body>
+</html>

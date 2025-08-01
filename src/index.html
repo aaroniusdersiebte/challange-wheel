@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Wheel</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Challenge Wheel</h1>
+            <div class="session-info">
+                <div class="session-donations">
+                    <span class="label">Session:</span>
+                    <span class="amount" id="sessionAmount">0,00€</span>
+                </div>
+                <div class="total-donations">
+                    <span class="label">Gesamt:</span>
+                    <span class="amount" id="totalAmount">0,00€</span>
+                </div>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="wheels">Räder</button>
+            <button class="nav-tab" data-tab="challenges">Challenges</button>
+            <button class="nav-tab" data-tab="donations">Spenden</button>
+            <button class="nav-tab" data-tab="settings">Einstellungen</button>
+        </nav>
+
+        <main class="main-content">
+            <!-- Wheels Tab -->
+            <div class="tab-content active" id="wheels-tab">
+                <div class="tab-header">
+                    <h2>Challenge Räder</h2>
+                    <button class="btn btn-primary" id="addWheelBtn">Neues Rad erstellen</button>
+                </div>
+                <div class="wheels-grid" id="wheelsGrid">
+                    <!-- Wheels will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Challenges Tab -->
+            <div class="tab-content" id="challenges-tab">
+                <div class="tab-header">
+                    <h2>Challenge Verwaltung</h2>
+                    <button class="btn btn-primary" id="addChallengeBtn">Neue Challenge erstellen</button>
+                </div>
+                <div class="challenges-list" id="challengesList">
+                    <!-- Challenges will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Donations Tab -->
+            <div class="tab-content" id="donations-tab">
+                <div class="tab-header">
+                    <h2>Spendentracking</h2>
+                    <div class="donation-controls">
+                        <button class="btn btn-secondary" id="resetSessionBtn">Session zurücksetzen</button>
+                        <button class="btn btn-secondary" id="exportHistoryBtn">Historie exportieren</button>
+                    </div>
+                </div>
+                <div class="donation-stats">
+                    <div class="stat-card">
+                        <h3>Aktuelle Session</h3>
+                        <div class="stat-value" id="sessionStats">0,00€</div>
+                        <div class="stat-subtitle">Challenges verloren: <span id="sessionLost">0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Gesamtstatistik</h3>
+                        <div class="stat-value" id="totalStats">0,00€</div>
+                        <div class="stat-subtitle">Challenges verloren: <span id="totalLost">0</span></div>
+                    </div>
+                </div>
+                <div class="donation-history">
+                    <h3>Historie</h3>
+                    <div class="history-list" id="historyList">
+                        <!-- History entries will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings-tab">
+                <div class="tab-header">
+                    <h2>Einstellungen</h2>
+                </div>
+                <div class="settings-grid">
+
+                    <div class="settings-section">
+                        <h3>Spenden</h3>
+                        <div class="form-group">
+                            <label>Betrag pro verlorener Challenge:</label>
+                            <input type="number" id="donationAmount" min="0" step="0.01" placeholder="0.00">
+                            <span class="currency">€</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Super Challenge Wahrscheinlichkeit:</label>
+                            <input type="number" id="superChance" min="0" max="100" placeholder="10">
+                            <span class="percentage">%</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Hotkeys</h3>
+                        <div class="hotkey-list" id="hotkeyList">
+                            <!-- Hotkeys will be dynamically added here -->
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Animation</h3>
+                        <div class="form-group">
+                            <label>Rad Animation Dauer:</label>
+                            <input type="number" id="animationDuration" min="1" max="10" step="0.1" placeholder="3.0">
+                            <span class="unit">Sekunden</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-actions">
+                    <button class="btn btn-primary" id="saveSettingsBtn">Einstellungen speichern</button>
+                </div>
+            </div>
+        </main>
+
+
+        <!-- Active Challenge Panel -->
+        <div class="challenge-panel" id="challengePanel" style="display: none;">
+            <div class="challenge-info">
+                <h3 id="activeChallengeTitle">Challenge Title</h3>
+                <div class="challenge-timer">
+                    <span id="timerDisplay">00:00</span>
+                </div>
+                <div class="challenge-progress">
+                    <span id="progressDisplay">0 / 10</span>
+                </div>
+            </div>
+            <div class="challenge-controls">
+                <button class="btn btn-sm btn-success" id="progressUpBtn">+1</button>
+                <button class="btn btn-sm btn-danger" id="progressDownBtn">-1</button>
+                <button class="btn btn-sm btn-warning" id="pauseBtn">Pause</button>
+                <button class="btn btn-sm btn-danger" id="failBtn">Verloren</button>
+                <button class="btn btn-sm btn-success" id="completeBtn">Geschafft</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Templates -->
+    <div class="modal-overlay" id="modalOverlay" style="display: none;">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">
+                <!-- Modal content will be dynamically added here -->
+            </div>
+            <div class="modal-actions" id="modalActions">
+                <!-- Modal actions will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="emoji-picker.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
