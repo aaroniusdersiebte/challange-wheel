@@ -2,9 +2,13 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
     <title>Challenge Wheel</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -116,6 +120,52 @@
                             <label>Rad Animation Dauer:</label>
                             <input type="number" id="animationDuration" min="1" max="10" step="0.1" placeholder="3.0">
                             <span class="unit">Sekunden</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Soundeffekte</h3>
+                        <div class="form-group">
+                            <label>Rad Dreh-Sound:</label>
+                            <div class="sound-controls">
+                                <select id="spinSoundType">
+                                    <option value="ambient">Spacey Ambient (Standard)</option>
+                                    <option value="mechanical">Mechanisches Klicken</option>
+                                    <option value="whoosh">Whoosh Effekt</option>
+                                    <option value="custom">Eigene Datei</option>
+                                </select>
+                                <input type="file" id="spinSoundFile" accept=".mp3,.wav,.ogg" style="display: none;">
+                                <button class="btn btn-sm btn-secondary" id="uploadSpinSound">Datei wählen</button>
+                                <button class="btn btn-sm btn-secondary" id="testSpinSound">Test</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Fortschritt-Sound:</label>
+                            <div class="sound-controls">
+                                <select id="progressSoundType">
+                                    <option value="beep">Beep (Standard)</option>
+                                    <option value="coin">Münze</option>
+                                    <option value="pop">Pop</option>
+                                    <option value="custom">Eigene Datei</option>
+                                </select>
+                                <input type="file" id="progressSoundFile" accept=".mp3,.wav,.ogg" style="display: none;">
+                                <button class="btn btn-sm btn-secondary" id="uploadProgressSound">Datei wählen</button>
+                                <button class="btn btn-sm btn-secondary" id="testProgressSound">Test</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Warnung-Sound:</label>
+                            <div class="sound-controls">
+                                <select id="warningSoundType">
+                                    <option value="warning">Warnung (Standard)</option>
+                                    <option value="alarm">Alarm</option>
+                                    <option value="bell">Glocke</option>
+                                    <option value="custom">Eigene Datei</option>
+                                </select>
+                                <input type="file" id="warningSoundFile" accept=".mp3,.wav,.ogg" style="display: none;">
+                                <button class="btn btn-sm btn-secondary" id="uploadWarningSound">Datei wählen</button>
+                                <button class="btn btn-sm btn-secondary" id="testWarningSound">Test</button>
+                            </div>
                         </div>
                     </div>
                 </div>

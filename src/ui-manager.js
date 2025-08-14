@@ -71,6 +71,56 @@ class UIManager {
                 e.preventDefault();
             }
         });
+
+        // Sound settings event listeners
+        document.getElementById('spinSoundType').addEventListener('change', (e) => {
+            this.handleSoundTypeChange('spin', e.target.value);
+        });
+
+        document.getElementById('progressSoundType').addEventListener('change', (e) => {
+            this.handleSoundTypeChange('progress', e.target.value);
+        });
+
+        document.getElementById('warningSoundType').addEventListener('change', (e) => {
+            this.handleSoundTypeChange('warning', e.target.value);
+        });
+
+        document.getElementById('testSpinSound').addEventListener('click', () => {
+            this.testSound('spin');
+        });
+
+        document.getElementById('testProgressSound').addEventListener('click', () => {
+            this.testSound('progress');
+        });
+
+        document.getElementById('testWarningSound').addEventListener('click', () => {
+            this.testSound('warning');
+        });
+
+        document.getElementById('spinSoundFile').addEventListener('change', (e) => {
+            this.handleCustomSoundUpload('spin', e.target.files[0]);
+        });
+
+        document.getElementById('progressSoundFile').addEventListener('change', (e) => {
+            this.handleCustomSoundUpload('progress', e.target.files[0]);
+        });
+
+        document.getElementById('warningSoundFile').addEventListener('change', (e) => {
+            this.handleCustomSoundUpload('warning', e.target.files[0]);
+        });
+
+        // Upload button listeners
+        document.getElementById('uploadSpinSound').addEventListener('click', () => {
+            document.getElementById('spinSoundFile').click();
+        });
+
+        document.getElementById('uploadProgressSound').addEventListener('click', () => {
+            document.getElementById('progressSoundFile').click();
+        });
+
+        document.getElementById('uploadWarningSound').addEventListener('click', () => {
+            document.getElementById('warningSoundFile').click();
+        });
     }
 
     switchTab(tabName) {
@@ -269,6 +319,13 @@ class UIManager {
         document.getElementById('superChance').value = this.dataManager.settings.superChance;
         document.getElementById('animationDuration').value = this.dataManager.settings.animationDuration;
 
+        // Sound settings
+        if (this.dataManager.settings.sounds) {
+            document.getElementById('spinSoundType').value = this.dataManager.settings.sounds.spinSoundType || 'ambient';
+            document.getElementById('progressSoundType').value = this.dataManager.settings.sounds.progressSoundType || 'beep';
+            document.getElementById('warningSoundType').value = this.dataManager.settings.sounds.warningSoundType || 'warning';
+        }
+
         const hotkeyContainer = document.getElementById('hotkeyList');
         hotkeyContainer.innerHTML = '';
 
@@ -285,8 +342,17 @@ class UIManager {
             hotkeyItem.className = 'hotkey-item';
             hotkeyItem.innerHTML = `
                 <div class="hotkey-label">${hotkeyLabels[action]}</div>
-                <input type="text" class="hotkey-input" value="${this.dataManager.settings.hotkeys[action]}" 
-                       onchange="uiManager.updateHotkey('${action}', this.value)">
+                <div class="hotkey-controls">
+                    <div class="hotkey-display" id="hotkey-${action}">${this.dataManager.settings.hotkeys[action] || 'Nicht gesetzt'}</div>
+                    <div class="hotkey-buttons">
+                        <button class="btn btn-sm btn-secondary hotkey-learn-btn" onclick="uiManager.startHotkeyLearning('${action}')">
+                            Lernen
+                        </button>
+                        <button class="btn btn-sm btn-danger hotkey-clear-btn" onclick="uiManager.clearHotkey('${action}')">
+                            ✕
+                        </button>
+                    </div>
+                </div>
             `;
             hotkeyContainer.appendChild(hotkeyItem);
         });
@@ -429,6 +495,20 @@ class UIManager {
         this.dataManager.settings.superChance = parseInt(document.getElementById('superChance').value) || 10;
         this.dataManager.settings.animationDuration = parseFloat(document.getElementById('animationDuration').value) || 3.0;
 
+        // Save sound settings
+        if (!this.dataManager.settings.sounds) {
+            this.dataManager.settings.sounds = {
+                spinSoundType: 'ambient',
+                progressSoundType: 'beep',
+                warningSoundType: 'warning',
+                customSounds: {}
+            };
+        }
+
+        this.dataManager.settings.sounds.spinSoundType = document.getElementById('spinSoundType').value;
+        this.dataManager.settings.sounds.progressSoundType = document.getElementById('progressSoundType').value;
+        this.dataManager.settings.sounds.warningSoundType = document.getElementById('warningSoundType').value;
+
         await this.dataManager.saveData();
         await ipcRenderer.invoke('update-hotkeys', this.dataManager.settings.hotkeys);
         
@@ -437,6 +517,228 @@ class UIManager {
 
     updateHotkey(action, key) {
         this.dataManager.settings.hotkeys[action] = key;
+        document.getElementById(`hotkey-${action}`).textContent = key || 'Nicht gesetzt';
+    }
+
+    startHotkeyLearning(action) {
+        const button = event.target;
+        const display = document.getElementById(`hotkey-${action}`);
+        
+        button.textContent = 'Drücken Sie eine Taste...';
+        button.disabled = true;
+        display.textContent = 'Warten...';
+        
+        // Remove existing listener if any
+        if (this.currentKeyListener) {
+            document.removeEventListener('keydown', this.currentKeyListener);
+        }
+        
+        this.currentKeyListener = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Build key combination string
+            const keys = [];
+            if (e.ctrlKey) keys.push('Ctrl');
+            if (e.altKey) keys.push('Alt');
+            if (e.shiftKey) keys.push('Shift');
+            if (e.metaKey) keys.push('Meta');
+            
+            // Add the main key (avoid modifier keys themselves)
+            if (!['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+                let keyName = e.key;
+                
+                // Convert common keys to more readable format
+                if (e.key === ' ') keyName = 'Space';
+                else if (e.key.length === 1) keyName = e.key.toUpperCase();
+                else if (e.key.startsWith('F') && e.key.length <= 3) keyName = e.key;
+                else if (e.key.startsWith('Arrow')) keyName = e.key.replace('Arrow', '');
+                
+                keys.push(keyName);
+            }
+            
+            const keyCombo = keys.join('+');
+            
+            // Check if it's a valid combination (not just modifiers)
+            if (keys.length > 0 && !['Control', 'Alt', 'Shift', 'Meta'].includes(keys[keys.length - 1])) {
+                this.updateHotkey(action, keyCombo);
+                button.textContent = 'Taste lernen';
+                button.disabled = false;
+                
+                // Update hotkeys in main process
+                ipcRenderer.invoke('update-hotkeys', this.dataManager.settings.hotkeys);
+                
+                // Remove the event listener
+                document.removeEventListener('keydown', this.currentKeyListener);
+                this.currentKeyListener = null;
+            }
+        };
+        
+        document.addEventListener('keydown', this.currentKeyListener, true);
+        
+        // Auto-cancel after 10 seconds
+        setTimeout(() => {
+            if (this.currentKeyListener) {
+                document.removeEventListener('keydown', this.currentKeyListener);
+                this.currentKeyListener = null;
+                button.textContent = 'Taste lernen';
+                button.disabled = false;
+                display.textContent = this.dataManager.settings.hotkeys[action] || 'Nicht gesetzt';
+            }
+        }, 10000);
+    }
+    
+    clearHotkey(action) {
+        this.updateHotkey(action, '');
+        ipcRenderer.invoke('update-hotkeys', this.dataManager.settings.hotkeys);
+    }
+
+    // Sound settings methods
+    handleSoundTypeChange(soundType, value) {
+        if (!this.dataManager.settings.sounds) {
+            this.dataManager.settings.sounds = {
+                spinSoundType: 'ambient',
+                progressSoundType: 'beep',
+                warningSoundType: 'warning',
+                customSounds: {}
+            };
+        }
+
+        this.dataManager.settings.sounds[soundType + 'SoundType'] = value;
+
+        // Show file input for custom sounds
+        const fileInput = document.getElementById(soundType + 'SoundFile');
+        if (value === 'custom') {
+            fileInput.style.display = 'inline-block';
+            fileInput.click();
+        } else {
+            fileInput.style.display = 'none';
+        }
+    }
+
+    async handleCustomSoundUpload(soundType, file) {
+        if (!file) return;
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const base64 = this.arrayBufferToBase64(arrayBuffer);
+            
+            if (!this.dataManager.settings.sounds.customSounds) {
+                this.dataManager.settings.sounds.customSounds = {};
+            }
+            
+            this.dataManager.settings.sounds.customSounds[soundType] = {
+                data: base64,
+                name: file.name,
+                type: file.type
+            };
+            
+            console.log(`Custom ${soundType} sound uploaded: ${file.name}`);
+            
+        } catch (error) {
+            console.error('Error uploading sound file:', error);
+            alert('Fehler beim Hochladen der Sounddatei.');
+        }
+    }
+
+    arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    testSound(soundType) {
+        // Create a simple test sound directly in the main window
+        this.createTestSound(soundType);
+    }
+
+    createTestSound(soundType) {
+        // Create audio context if not exists
+        if (!this.audioContext) {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.error('Audio context not available:', e);
+                return;
+            }
+        }
+
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+
+        let frequency, duration;
+        
+        switch(soundType) {
+            case 'spin':
+                // Spacey ambient sound
+                this.createSpaceyTestSound();
+                return;
+            case 'progress':
+                frequency = 600;
+                duration = 0.15;
+                break;
+            case 'warning':
+                frequency = 900;
+                duration = 0.2;
+                break;
+            default:
+                frequency = 440;
+                duration = 0.3;
+        }
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.01);
+        gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    createSpaceyTestSound() {
+        if (!this.audioContext) return;
+        
+        const oscillator1 = this.audioContext.createOscillator();
+        const oscillator2 = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        const filterNode = this.audioContext.createBiquadFilter();
+        
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(filterNode);
+        filterNode.connect(this.audioContext.destination);
+        
+        filterNode.type = 'lowpass';
+        filterNode.frequency.value = 600;
+        
+        oscillator1.frequency.value = 220;
+        oscillator1.type = 'sine';
+        oscillator2.frequency.value = 330;
+        oscillator2.type = 'triangle';
+        
+        const now = this.audioContext.currentTime;
+        const duration = 1.0;
+        
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.05, now + 0.1);
+        gainNode.gain.linearRampToValueAtTime(0, now + duration);
+        
+        oscillator1.start(now);
+        oscillator2.start(now);
+        oscillator1.stop(now + duration);
+        oscillator2.stop(now + duration);
     }
 
     resetSession() {
@@ -1086,7 +1388,64 @@ const additionalCSS = `
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.02);
 }
+
+.wheel-challenges-section {
+    margin-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+}
+
+.wheel-challenges-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.wheel-challenge-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wheel-challenge-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.wheel-challenge-image {
+    font-size: 20px;
+}
+
+.wheel-challenge-details {
+    flex: 1;
+}
+
+.wheel-challenge-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.wheel-challenge-meta {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.wheel-challenge-actions {
+    display: flex;
+    gap: 6px;
+}
 `;
+
 
 // Add the CSS to the document
 const style = document.createElement('style');

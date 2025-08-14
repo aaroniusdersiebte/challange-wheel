@@ -6,16 +6,17 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     color: #ffffff;
     overflow-x: hidden;
 }
 
 .app-container {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 /* Header */
@@ -30,11 +31,13 @@ body {
 }
 
 .app-header h1 {
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
     background: linear-gradient(135deg, #c7592e 0%, #e67e40 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .session-info {
@@ -70,34 +73,43 @@ body {
 
 .nav-tab {
     flex: 1;
-    padding: 15px 20px;
+    padding: 12px 20px;
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    margin: 0 4px;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
     cursor: pointer;
-    transition: all 0.3s ease;
-    border-bottom: 2px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .nav-tab:hover {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
 }
 
 .nav-tab.active {
-    color: #c7592e;
-    border-bottom-color: #c7592e;
-    background: rgba(199, 89, 46, 0.1);
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(199, 89, 46, 0.15), rgba(230, 126, 64, 0.1));
+    border-color: rgba(199, 89, 46, 0.3);
+    box-shadow: 0 4px 12px rgba(199, 89, 46, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Main Content */
 .main-content {
     flex: 1;
-    padding: 30px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    min-height: 0; /* Important for flex overflow */
+    min-height: 0;
+    height: calc(100vh - 140px); /* Header + nav height */
+    overflow: hidden;
 }
 
 .tab-content {
@@ -109,6 +121,7 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    height: 100%;
     overflow: hidden;
 }
 
@@ -116,13 +129,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    flex-shrink: 0; /* Don't shrink the header */
+    margin-bottom: 15px;
+    flex-shrink: 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tab-header h2 {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #ffffff;
 }
 
 /* Buttons */
@@ -273,11 +290,13 @@ body {
     flex-direction: column;
     gap: 15px;
     width: 100%;
-    padding: 0;
+    padding: 0 10px 0 0;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
+    height: 100%;
+    max-height: none; /* Remove height restrictions */
 }
 
 .challenge-item {
@@ -431,25 +450,53 @@ body {
 .settings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 30px;
-    margin-bottom: 30px;
+    gap: 20px;
+    padding: 0 10px 20px 0;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    max-height: none;
+    align-content: start;
 }
 
 .settings-section {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 25px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 30px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.settings-section:hover {
+    border-color: rgba(199, 89, 46, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .settings-section h3 {
-    font-size: 16px;
-    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 24px;
     color: #c7592e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-section h3::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(135deg, #c7592e, #e67e40);
+    border-radius: 2px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    position: relative;
 }
 
 .form-group:last-child {
@@ -458,20 +505,32 @@ body {
 
 .form-group label {
     display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: -0.01em;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
     color: white;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.form-group input[type="number"] {
+    padding-right: 50px; /* Make room for currency/percentage symbols */
+}
+
+.form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
 }
 
 .form-group select option {
@@ -484,7 +543,9 @@ body {
 .form-group select:focus {
     outline: none;
     border-color: #c7592e;
-    box-shadow: 0 0 0 3px rgba(199, 89, 46, 0.1);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 4px rgba(199, 89, 46, 0.15), 0 4px 12px rgba(199, 89, 46, 0.1);
+    transform: translateY(-1px);
 }
 
 .size-inputs {
@@ -514,33 +575,141 @@ body {
 .currency,
 .percentage,
 .unit {
-    color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 14px;
-    margin-left: 8px;
+    font-weight: 500;
+    pointer-events: none;
+    line-height: 1;
+    margin-top: 12px; /* Adjust for label height */
+}
+
+.settings-actions {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.settings-actions .btn {
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #c7592e, #e67e40);
+    box-shadow: 0 4px 16px rgba(199, 89, 46, 0.3);
+    transition: all 0.3s ease;
+}
+
+.settings-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(199, 89, 46, 0.4);
 }
 
 /* Hotkey List */
 .hotkey-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
 }
 
 .hotkey-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    gap: 12px;
+}
+
+.hotkey-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .hotkey-label {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: -0.01em;
+    margin-bottom: 0;
 }
 
-.hotkey-input {
-    width: 100px;
+.hotkey-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hotkey-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hotkey-display {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    font-family: 'Inter', monospace;
+    font-size: 13px;
+    font-weight: 600;
     text-align: center;
-    font-family: monospace;
+    color: #ffd700;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hotkey-display:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.hotkey-learn-btn {
+    min-width: 80px;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.hotkey-clear-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.sound-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sound-controls select {
+    flex: 1;
+    max-width: 200px;
+}
+
+.sound-controls .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 50px;
 }
 
 /* Challenge Panel */
@@ -696,11 +865,19 @@ body {
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
 @media (max-width: 768px) {
     .app-header {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+        padding: 15px 20px;
     }
 
     .session-info {
@@ -708,7 +885,8 @@ body {
     }
 
     .main-content {
-        padding: 20px;
+        padding: 15px;
+        height: calc(100vh - 120px);
     }
 
     .wheels-grid {
@@ -717,6 +895,7 @@ body {
 
     .settings-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
     }
 
     .challenge-panel {
@@ -728,6 +907,11 @@ body {
     .modal {
         width: 95%;
         margin: 10px;
+    }
+
+    .tab-header {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
     }
 }
 
@@ -747,6 +931,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* High-DPI Display Optimizations - Minimal to prevent lagging */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
 }
 
 /* Emoji Picker */

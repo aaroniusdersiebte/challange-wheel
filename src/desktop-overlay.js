@@ -37,8 +37,8 @@ class DesktopOverlay {
         }
     }
 
-    async playSound(type) {
-        console.log('Attempting to play sound:', type);
+    async playSound(type, volumeMultiplier = 1) {
+        console.log('Attempting to play sound:', type, 'volume:', volumeMultiplier);
         
         // Simple approach using data URL generated beeps
         try {
@@ -46,10 +46,9 @@ class DesktopOverlay {
             
             switch(type) {
                 case 'spin':
-                    // Start clicking sound during wheel spin
-                    // Duration will be set when we call this method
-                    this.startClickingSound(this.currentAnimationDuration || 3000);
-                    return; // Don't play individual sound, just start clicking
+                    // Start spacey ambient sound during wheel spin
+                    this.startSpinAmbientSound(this.currentAnimationDuration || 3000);
+                    return; // Don't play individual sound, just start ambient
                 case 'click':
                     frequency = 800;
                     duration = 0.05;
@@ -70,6 +69,21 @@ class DesktopOverlay {
                     duration = 0.4;
                     type2 = 'lose-chord';
                     break;
+                case 'progress':
+                    // Subtle beep for progress changes
+                    frequency = 600;
+                    duration = 0.1;
+                    break;
+                case 'warning':
+                    // Warning sound for time running out
+                    frequency = 900;
+                    duration = 0.15;
+                    break;
+                case 'final':
+                    // Final countdown sound
+                    frequency = 1100;
+                    duration = 0.2;
+                    break;
                 default:
                     frequency = 440;
                     duration = 0.3;
@@ -84,7 +98,7 @@ class DesktopOverlay {
                     
                     if (type2 === 'win-chord') {
                         // Play ascending chord for win (reduced volume)
-                        this.playChord([523, 659, 784], 0.06, 0.6); // C5, E5, G5 - reduced volume from 0.15 to 0.06
+                        this.playChord([523, 659, 784], 0.06 * volumeMultiplier, 0.6); // C5, E5, G5 - reduced volume from 0.15 to 0.06
                         return;
                     } else if (type2 === 'lose-chord') {
                         // Play descending tone for lose
@@ -101,7 +115,12 @@ class DesktopOverlay {
                     oscillator.frequency.value = frequency;
                     oscillator.type = type === 'click' ? 'square' : 'sine';
                     
-                    const volume = type === 'click' ? 0.03 : 0.1;
+                    let baseVolume = type === 'click' ? 0.03 : 0.1;
+                    if (type === 'progress') baseVolume = 0.04;
+                    if (type === 'warning') baseVolume = 0.06;
+                    if (type === 'final') baseVolume = 0.08;
+                    
+                    const volume = baseVolume * volumeMultiplier;
                     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
                     gainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.01);
                     gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + duration);
@@ -125,46 +144,93 @@ class DesktopOverlay {
         }
     }
 
-    startClickingSound(duration = 3000) {
-        this.stopClickingSound(); // Stop any existing clicking
+    startSpinAmbientSound(duration = 3000) {
+        this.stopSpinAmbientSound(); // Stop any existing ambient sound
         
-        // Start clicking with progressive slowing
-        let clickCount = 0;
-        const maxClicks = Math.floor(duration / 50); // Adaptive max clicks based on duration
-        const startInterval = 40; // Start fast
-        const endInterval = 150; // End slow
+        if (!this.audioContext) return;
         
-        const scheduleNextClick = () => {
-            if (clickCount >= maxClicks) {
-                return;
-            }
+        try {
+            // Create a spacey, atmospheric sound
+            const oscillator1 = this.audioContext.createOscillator();
+            const oscillator2 = this.audioContext.createOscillator();
+            const oscillator3 = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            const filterNode = this.audioContext.createBiquadFilter();
             
-            // Calculate current interval based on progress (logarithmic easing)
-            const progress = clickCount / maxClicks;
-            const easeOut = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
-            const currentInterval = startInterval + (endInterval - startInterval) * easeOut;
+            // Connect the nodes
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            oscillator3.connect(gainNode);
+            gainNode.connect(filterNode);
+            filterNode.connect(this.audioContext.destination);
             
-            this.clickTimeout = setTimeout(() => {
-                this.playSound('click');
-                clickCount++;
-                scheduleNextClick();
-            }, currentInterval);
-        };
-        
-        scheduleNextClick();
-        console.log('Started progressive clicking sound');
+            // Set up the filter for a spacey effect
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 800;
+            filterNode.Q.value = 2;
+            
+            // Configure oscillators for a rich, spacey sound
+            oscillator1.frequency.value = 220; // Base frequency
+            oscillator1.type = 'sine';
+            
+            oscillator2.frequency.value = 330; // Fifth above
+            oscillator2.type = 'triangle';
+            
+            oscillator3.frequency.value = 440; // Octave above
+            oscillator3.type = 'sawtooth';
+            
+            // Set up dynamic volume and frequency modulation
+            const now = this.audioContext.currentTime;
+            const endTime = now + (duration / 1000);
+            
+            // Start with low volume and build up
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.08, now + 0.5);
+            gainNode.gain.exponentialRampToValueAtTime(0.03, endTime - 0.5);
+            gainNode.gain.linearRampToValueAtTime(0, endTime);
+            
+            // Modulate frequencies for movement
+            oscillator1.frequency.exponentialRampToValueAtTime(180, endTime);
+            oscillator2.frequency.exponentialRampToValueAtTime(270, endTime);
+            oscillator3.frequency.exponentialRampToValueAtTime(360, endTime);
+            
+            // Modulate filter for sweep effect
+            filterNode.frequency.setValueAtTime(800, now);
+            filterNode.frequency.exponentialRampToValueAtTime(400, endTime);
+            
+            // Start all oscillators
+            oscillator1.start(now);
+            oscillator2.start(now);
+            oscillator3.start(now);
+            
+            // Stop all oscillators
+            oscillator1.stop(endTime);
+            oscillator2.stop(endTime);
+            oscillator3.stop(endTime);
+            
+            // Store references for potential early stopping
+            this.spinAmbientNodes = [oscillator1, oscillator2, oscillator3];
+            
+            console.log('Started spacey ambient sound for wheel spin');
+        } catch (e) {
+            console.error('Error creating ambient sound:', e);
+        }
     }
     
-    stopClickingSound() {
-        if (this.clickInterval) {
-            clearInterval(this.clickInterval);
-            this.clickInterval = null;
+    stopSpinAmbientSound() {
+        if (this.spinAmbientNodes) {
+            try {
+                this.spinAmbientNodes.forEach(node => {
+                    if (node.stop) {
+                        node.stop();
+                    }
+                });
+                this.spinAmbientNodes = null;
+                console.log('Stopped ambient sound');
+            } catch (e) {
+                console.error('Error stopping ambient sound:', e);
+            }
         }
-        if (this.clickTimeout) {
-            clearTimeout(this.clickTimeout);
-            this.clickTimeout = null;
-        }
-        console.log('Stopped clicking sound');
     }
     
     playChord(frequencies, volume = 0.1, duration = 0.5) {
@@ -231,8 +297,8 @@ class DesktopOverlay {
             this.resultHideTimeout = null;
         }
         
-        // Stop clicking sounds
-        this.stopClickingSound();
+        // Stop ambient sounds
+        this.stopSpinAmbientSound();
         
         // Remove any existing result overlays
         const existingResults = document.querySelectorAll('.result-overlay');
@@ -253,6 +319,11 @@ class DesktopOverlay {
         ipcRenderer.on('update-display', (event, data) => {
             console.log('Updating display with data:', data);
             this.updateDisplay(data);
+        });
+
+        ipcRenderer.on('hide-overlay', () => {
+            console.log('Received hide overlay command');
+            this.fadeOutOverlay();
         });
 
         // Handle window focus to stay on top
@@ -357,8 +428,8 @@ class DesktopOverlay {
             this.playSound('spin');
             
             this.animateWheelSmooth(container, finalPosition, animationDuration, () => {
-                // Stop clicking sound and play selection sound when wheel stops
-                this.stopClickingSound();
+                // Stop ambient sound and play selection sound when wheel stops
+                this.stopSpinAmbientSound();
                 this.playSound('select');
                 this.showWinnerDisplay(selectedChallenge);
             });
@@ -369,6 +440,8 @@ class DesktopOverlay {
         const startTime = performance.now();
         const startPosition = 0;
         const distance = finalPosition - startPosition;
+        const shakeStartTime = totalDuration * 0.85; // Start shaking at 85% completion
+        const shakeEndTime = totalDuration * 0.95; // End shaking at 95% completion
         
         const animate = (currentTime) => {
             const elapsed = currentTime - startTime;
@@ -378,12 +451,22 @@ class DesktopOverlay {
             // Custom cubic-bezier similar to CSS ease-out but more gradual
             const easeOutCubic = 1 - Math.pow(1 - progress, 3);
             
-            const currentPosition = startPosition + (distance * easeOutCubic);
+            let currentPosition = startPosition + (distance * easeOutCubic);
+            
+            // Add shake effect near the end
+            if (elapsed >= shakeStartTime && elapsed <= shakeEndTime) {
+                const shakeProgress = (elapsed - shakeStartTime) / (shakeEndTime - shakeStartTime);
+                const shakeIntensity = 8 * (1 - shakeProgress); // Reduce intensity over time
+                const shakeOffset = Math.sin(elapsed * 0.1) * shakeIntensity; // High frequency shake
+                currentPosition += shakeOffset;
+            }
+            
             container.style.transform = `translateX(${currentPosition}px)`;
             
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
+                // Final settle without shake
                 container.style.transform = `translateX(${finalPosition}px)`;
                 onComplete();
             }
@@ -426,14 +509,14 @@ class DesktopOverlay {
 
     showChallengePanel(challenge) {
         this.currentChallenge = challenge;
+        // Reset progress tracking for sound effects
+        this.previousProgress = undefined;
+        this.previousTime = undefined;
         const panel = document.getElementById('challengePanelOverlay');
         
         // Update challenge info
         document.getElementById('challengeEmoji').textContent = challenge.image;
         document.getElementById('activeChallengeTitle').textContent = challenge.title;
-        document.getElementById('challengeType').textContent = this.getTypeDisplayName(challenge.type);
-        document.getElementById('challengeTimeLimit').textContent = 
-            `Zeitlimit: ${Math.floor(challenge.timeLimit / 60)}:${(challenge.timeLimit % 60).toString().padStart(2, '0')} min`;
         
         // Show super indicator if needed
         const superIndicator = document.getElementById('superIndicator');
@@ -463,8 +546,28 @@ class DesktopOverlay {
     }
 
     hideChallengePanel() {
-        document.getElementById('challengePanelOverlay').style.display = 'none';
+        const panel = document.getElementById('challengePanelOverlay');
+        panel.style.animation = 'fadeOut 0.5s ease-out forwards';
+        
+        setTimeout(() => {
+            panel.style.display = 'none';
+            panel.style.animation = '';
+            panel.style.opacity = '1'; // Reset for next use
+        }, 500);
+        
         this.currentChallenge = null;
+    }
+
+    fadeOutOverlay() {
+        console.log('Starting overlay fade-out animation');
+        document.body.style.animation = 'fadeOut 0.8s ease-out forwards';
+        
+        // After fade-out animation completes, inform main process to actually hide window
+        setTimeout(() => {
+            document.body.style.animation = '';
+            document.body.style.opacity = '1'; // Reset for next use
+            ipcRenderer.invoke('overlay-fade-complete');
+        }, 800);
     }
 
     updateDisplay(data) {
@@ -485,7 +588,7 @@ class DesktopOverlay {
         // Store previous time for bounce detection
         if (!this.previousTime) this.previousTime = challenge.timeRemaining;
         
-        // Check for time milestones and add bounce animation
+        // Check for time milestones and add bounce animation + sound effects
         const shouldBounceTime = (
             (challenge.timeRemaining === 900) ||  // 15 minutes
             (challenge.timeRemaining === 600) ||  // 10 minutes  
@@ -503,14 +606,20 @@ class DesktopOverlay {
             timerDisplay.classList.remove('time-bounce-animation');
             setTimeout(() => timerDisplay.classList.add('time-bounce-animation'), 10);
             setTimeout(() => timerDisplay.classList.remove('time-bounce-animation'), 500);
+            
+            // Play warning sounds at key moments
+            if (challenge.timeRemaining === 60) {
+                // Last minute warning
+                this.playSound('warning');
+            } else if (challenge.timeRemaining <= 10 && challenge.timeRemaining > 0) {
+                // Final countdown sounds
+                this.playSound('final');
+            }
         }
         
-        // Add pulsing effect when time is running low
+        // Add color change when time is running low (no glow, just red color and bounce)
         if (challenge.timeRemaining <= 30) {
             timerDisplay.style.color = '#ef4444';
-            timerDisplay.style.animation = 'pulse 1s infinite';
-        } else if (challenge.timeRemaining <= 60) {
-            timerDisplay.style.color = '#f59e0b';
             timerDisplay.style.animation = 'none';
         } else {
             timerDisplay.style.color = '#ffffff';
@@ -524,8 +633,8 @@ class DesktopOverlay {
         const progressDisplay = document.getElementById('progressDisplay');
         const progressBar = document.getElementById('progressBar');
         
-        // Store previous progress for bounce detection
-        if (!this.previousProgress) this.previousProgress = challenge.progress;
+        // Store previous progress for bounce detection (initialize to -1 to detect first change)
+        if (this.previousProgress === undefined) this.previousProgress = -1;
         
         if (challenge.type === 'survive') {
             // Hide progress completely for survive challenges
@@ -535,11 +644,14 @@ class DesktopOverlay {
             const remaining = Math.max(0, challenge.target - challenge.progress);
             progressDisplay.textContent = `${challenge.progress}/${challenge.target}`;
             
-            // Add bounce animation when progress changes
+            // Add bounce animation and sound when progress changes
             if (challenge.progress !== this.previousProgress) {
                 progressDisplay.classList.remove('scale-bounce-animation');
                 setTimeout(() => progressDisplay.classList.add('scale-bounce-animation'), 10);
                 setTimeout(() => progressDisplay.classList.remove('scale-bounce-animation'), 400);
+                
+                // Play progress sound effect
+                this.playSound('progress');
             }
             
             // Update progress bar with more aggressive red color progression
@@ -560,11 +672,14 @@ class DesktopOverlay {
             progressDisplay.parentElement.style.display = 'block';
             progressDisplay.textContent = `${challenge.progress}/${challenge.target}`;
             
-            // Add bounce animation when progress changes
+            // Add bounce animation and sound when progress changes
             if (challenge.progress !== this.previousProgress) {
                 progressDisplay.classList.remove('scale-bounce-animation');
                 setTimeout(() => progressDisplay.classList.add('scale-bounce-animation'), 10);
                 setTimeout(() => progressDisplay.classList.remove('scale-bounce-animation'), 400);
+                
+                // Play progress sound effect
+                this.playSound('progress');
             }
             
             // Standard progress bar for collect challenges

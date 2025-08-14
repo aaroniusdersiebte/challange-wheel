@@ -344,6 +344,15 @@
             }
         }
 
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
         @keyframes bounceIn {
             0% {
                 opacity: 0;
@@ -501,10 +510,6 @@
             <div class="challenge-info">
                 <div class="challenge-emoji" id="challengeEmoji">🎯</div>
                 <h3 id="activeChallengeTitle">Challenge Title</h3>
-                <div class="challenge-meta">
-                    <div class="challenge-type" id="challengeType">Challenge Typ</div>
-                    <div class="challenge-time-limit" id="challengeTimeLimit">Zeitlimit: 3:00 min</div>
-                </div>
                 <div class="challenge-stats">
                     <div class="stat-item">
                         <span class="stat-value" id="timerDisplay">00:00</span>
