@@ -7,20 +7,39 @@ let mainWindow;
 let overlayWindow;
 
 function createMainWindow() {
+  // Get primary display info for better 4K/HiDPI support
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+  const scaleFactor = primaryDisplay.scaleFactor;
+  
+  // Calculate optimal window size based on screen size and scale factor
+  const windowWidth = Math.min(1400, Math.floor(screenWidth * 0.8));
+  const windowHeight = Math.min(900, Math.floor(screenHeight * 0.8));
+  
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    width: windowWidth,
+    height: windowHeight,
+    minWidth: 1000,
+    minHeight: 700,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      webSecurity: false // Allow audio to work properly
+      webSecurity: false,
+      disableBlinkFeatures: 'Auxclick',
+      backgroundThrottling: false,
+      offscreen: false
     },
     icon: path.join(__dirname, '../assets/icon.png'),
     show: false,
-    titleBarStyle: 'default'
+    titleBarStyle: 'default',
+    backgroundColor: '#1a1a1a',
+    thickFrame: false,
+    hasShadow: false,
+    skipTaskbar: false,
+    resizable: true,
+    movable: true
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
@@ -46,9 +65,14 @@ function createMainWindow() {
 }
 
 function createOverlayWindow() {
+  // Get primary display info for overlay sizing
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.bounds;
+  
   overlayWindow = new BrowserWindow({
-    width: 1920,
-    height: 1080,
+    width: screenWidth,
+    height: screenHeight,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
@@ -165,6 +189,14 @@ ipcMain.handle('show-overlay', (event, data) => {
 });
 
 ipcMain.handle('hide-overlay', () => {
+  if (overlayWindow) {
+    // Send message to overlay to start fade-out animation instead of hiding immediately
+    overlayWindow.webContents.send('hide-overlay');
+  }
+  return true;
+});
+
+ipcMain.handle('overlay-fade-complete', () => {
   if (overlayWindow) {
     overlayWindow.hide();
   }

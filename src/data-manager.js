@@ -34,6 +34,12 @@ class DataManager {
             donationAmount: 5.00,
             superChance: 10,
             animationDuration: 3.0,
+            sounds: {
+                spinSoundType: 'ambient',
+                progressSoundType: 'beep',
+                warningSoundType: 'warning',
+                customSounds: {}
+            },
             hotkeys: {
                 spinWheel: 'F1',
                 progressUp: 'F2',
